@@ -3,10 +3,15 @@ import re
 
 radius = 10
 min_size = 6
-max_rent = 600
+max_rent = 800
 city = "utrecht"
-url = "https://kamernet.nl/en/for-rent/properties-"+city+"?radius="+str(radius)+"&maxRent="+str(max_rent/100)+"&listingTypes=1%2C2%2C4%2C8&searchview=1"
-
+page_suffix = "&typeAndCity=properties-utrecht&pageNo="
+page_number = 1
+url = "https://kamernet.nl/en/for-rent/properties-"+\
+      city+"?radius="+str(radius)+"&maxRent="+str(max_rent/100)+\
+      "&listingTypes=1%2C2%2C4%2C8&searchview=1"+\
+      str(page_suffix)+str(page_number)
+print(f"url used: {url}")
 # Define the URL
 # url = "https://kamernet.nl/en/for-rent/properties-utrecht?radius=5&minSize=6&maxRent=6&listingTypes=1%2C2%2C4%2C8&searchview=1"
 
