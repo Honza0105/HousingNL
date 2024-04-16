@@ -1,8 +1,14 @@
 import requests
 import re
 
+radius = 10
+min_size = 6
+max_rent = 600
+city = "utrecht"
+url = "https://kamernet.nl/en/for-rent/properties-"+city+"?radius="+str(radius)+"&maxRent="+str(max_rent/100)+"&listingTypes=1%2C2%2C4%2C8&searchview=1"
+
 # Define the URL
-url = "https://kamernet.nl/en/for-rent/properties-utrecht?radius=5&minSize=6&maxRent=6&listingTypes=1%2C2%2C4%2C8&searchview=1"
+# url = "https://kamernet.nl/en/for-rent/properties-utrecht?radius=5&minSize=6&maxRent=6&listingTypes=1%2C2%2C4%2C8&searchview=1"
 
 # Send a GET request to the URL
 response = requests.get(url)
