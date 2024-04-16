@@ -9,8 +9,8 @@ response = requests.get(url)
 
 # Check if the request was successful
 if response.status_code == 200:
-    # Use regex pattern to find rent and location
-    rent_pattern = r'Room for rent (\d+)\s+euro\s+([^\d]+),\s+([^\d]+)'
+    # Use regex pattern to find rent, location, and city for both rooms and apartments
+    rent_pattern = r'(?:Room|Apartment) for rent (\d+)\s+euro\s+([^,]+),\s+([^\d]+)'
 
     # Find all matches of rent pattern in response text
     matches = re.findall(rent_pattern, response.text)
@@ -18,12 +18,12 @@ if response.status_code == 200:
     # Print out the number of matches
     print("Number of listings found:", len(matches))
 
-    # Print out the extracted rents and locations
+    # Print out the extracted rents, locations, and cities
     for match in matches:
         rent, location, city = match
         print("Rent:", rent)
-        print("Location:", location)
-        print("City:", city)
+        print("Location:", location.strip())
+        print("City:", city.strip())
 
 else:
     print("Failed to retrieve the page. Status code:", response.status_code)
