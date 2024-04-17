@@ -1,5 +1,42 @@
 import requests
 import re
+import os
+
+# Define the Listing class
+class Listing:
+    def __init__(self, rent, location, city):
+        self.rent = rent
+        self.location = location.strip()
+        self.city = city.strip()
+
+    # Define equality comparison method
+    def __eq__(self, other):
+        return (
+            isinstance(other, Listing) and
+            self.rent == other.rent and
+            self.location == other.location and
+            self.city == other.city
+        )
+
+    # Define hash method for hashing in sets
+    def __hash__(self):
+        return hash((self.rent, self.location, self.city))
+
+# Function to save new listings to a file
+def save_new_listings(listings):
+    with open("listings.txt", "a") as file:
+        for listing in listings:
+            file.write(",".join(listing) + "\n")
+
+
+# Function to load listings from a file
+def load_listings():
+    listings = []
+    if os.path.exists("listings.txt"):
+        with open("listings.txt", "r") as file:
+            for line in file:
+                listings.append(line.strip().split(","))
+    return listings
 
 radius = 10
 min_size = 6
@@ -24,17 +61,33 @@ if response.status_code == 200:
     rent_pattern = r'(?:Room|Apartment) for rent (\d+)\s+euro\s+([^,]+),\s+([^\d]+)'
 
     # Find all matches of rent pattern in response text
-    matches = re.findall(rent_pattern, response.text)
+    new_listings = re.findall(rent_pattern, response.text)
 
-    # Print out the number of matches
-    print("Number of listings found:", len(matches))
+    # Load previously saved listings and convert to Listing objects
+    old_listings = [Listing(*listing) for listing in load_listings()]
 
-    # Print out the extracted rents, locations, and cities
-    for match in matches:
-        rent, location, city = match
-        print("Rent:", rent)
-        print("Location:", location.strip())
-        print("City:", city.strip())
+    # Convert new listings to Listing objects
+    new_listings = [Listing(*listing) for listing in new_listings]
+
+    # Find new listings that are not in old listings
+    new_listings_filtered = [listing for listing in new_listings if listing not in old_listings]
+
+    if new_listings_filtered:
+        # Send email with new listings
+        # Implement email sending here (you mentioned you have it set up)
+
+        # Print new listings
+        print(f"New {len(new_listings_filtered)} listing(s) found:")
+        for listing in new_listings_filtered:
+            print("Rent:", listing.rent)
+            print("Location:", listing.location)
+            print("City:", listing.city)
+
+    else:
+        print("No new listings found")
+
+    # Save all new listings to file for next run
+    save_new_listings([listing.__dict__.values() for listing in new_listings_filtered])
 
 else:
     print("Failed to retrieve the page. Status code:", response.status_code)
