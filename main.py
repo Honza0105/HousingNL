@@ -1,4 +1,5 @@
 import time
+import logging
 
 import requests
 import re
@@ -88,21 +89,29 @@ sender_password = os.environ.get('SENDER_PASSWORD')
 receiver_email = os.environ.get('RECEIVER_EMAIL')
 subject = "Kamernet bot update"
 
-
-url = "https://kamernet.nl/en/for-rent/properties-"+\
-      city+"?radius="+str(radius)+"&maxRent="+str(max_rent/100)+\
-      "&listingTypes=1%2C2%2C4%2C8&searchview=1"+\
-      str(page_suffix)+str(page_number)
-print(f"url used: {url}")
-# Define the URL
-# url = "https://kamernet.nl/en/for-rent/properties-utrecht?radius=5&minSize=6&maxRent=6&listingTypes=1%2C2%2C4%2C8&searchview=1"
+# Configure logging
+logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 while True:
-    # Send a GET request to the URL
-    response = requests.get(url)
+    any_new_listings = False
+    page_number = 1
+    while True:
+        # Define the URL for the current page
+        url = "https://kamernet.nl/en/for-rent/properties-" + \
+              city + "?radius=" + str(radius) + "&maxRent=" + str(max_rent / 100) + \
+              "&listingTypes=1%2C2%2C4%2C8&searchview=1" + \
+              str(page_suffix) + str(page_number)
 
-    # Check if the request was successful
-    if response.status_code == 200:
+        print(f"url used: {url}")
+
+        # Send a GET request to the URL
+        response = requests.get(url)
+
+        # Check if the request was successful
+        if response.status_code != 200:
+            print("Failed to retrieve the page. Status code:", response.status_code)
+            break
+
         # Use regex pattern to find rent, location, and city for both rooms and apartments
         rent_pattern = r'(?:Room|Apartment) for rent (\d+)\s+euro\s+([^,]+),\s+([^\d]+)'
 
@@ -118,35 +127,44 @@ while True:
         # Find new listings that are not in old listings
         new_listings_filtered = [listing for listing in new_listings if listing not in old_listings]
 
+        # Add new listings to the list of all new listings
         if new_listings_filtered:
-            # Send email with new listings
-            message = f"New {len(new_listings_filtered)} listing(s) found:\n"
-            for listing in new_listings_filtered:
-                message += str(listing)
-                message += "\n\n"
+            any_new_listings = True
+            save_new_listings([listing.__dict__.values() for listing in new_listings_filtered])
 
+        # Increment page number for the next iteration
+        page_number += 1
 
-            if sender_email and sender_password:
-                send_email(sender_email, sender_password, receiver_email, subject, message)
-                print("Email sent successfully")
-            else:
-                print("Sender email or password not provided.")
+        # If no new listings found on the current page, exit the loop
+        if not new_listings:
+            break
 
-            # Print new listings
-            print(f"New {len(new_listings_filtered)} listing(s) found:")
-            for listing in new_listings_filtered:
-                print("Rent:", listing.rent)
-                print("Location:", listing.location)
-                print("City:", listing.city)
+    if any_new_listings:
+        # Send email with all new listings
+        message = "New listings found:\n"
+        for listing in new_listings_filtered:
+            message += str(listing)
+            message += "\n\n"
 
+        if sender_email and sender_password:
+            send_email(sender_email, sender_password, receiver_email, subject, message)
+            print("Email sent successfully")
+            logging.info("Email sent successfully")
         else:
-            print("No new listings found")
+            print("Sender email or password not provided.")
+            logging.warning("Sender email or password not provided.")
 
-        # Save all new listings to file for next run
-        save_new_listings([listing.__dict__.values() for listing in new_listings_filtered])
+        # Print new listings
+        print(f"New {len(new_listings_filtered)} listing(s) found:")
+        for listing in new_listings_filtered:
+            print("Rent:", listing.rent)
+            print("Location:", listing.location)
+            print("City:", listing.city)
 
     else:
-        print("Failed to retrieve the page. Status code:", response.status_code)
-    print("Waiting for 1 hour")
-    time.sleep(3600)
+        print("No new listings found")
+        logging.info("No new listings found")
 
+    # Wait for 1/2 hour before making the next request
+    print("Waiting for half an hour before checking for new listings again")
+    time.sleep(1000)
