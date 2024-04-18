@@ -86,7 +86,7 @@ page_number = 1
 sender_email = os.environ.get('SENDER_EMAIL')
 sender_password = os.environ.get('SENDER_PASSWORD')
 
-receiver_email = os.environ.get('RECEIVER_EMAIL')
+receiver_emails = os.environ.get('RECEIVER_EMAIL').split(',')
 subject = "Kamernet bot update"
 
 # Configure logging
@@ -147,7 +147,10 @@ while True:
             message += "\n\n"
 
         if sender_email and sender_password:
-            send_email(sender_email, sender_password, receiver_email, subject, message)
+            for receiver_email in receiver_emails:
+                send_email(sender_email, sender_password, receiver_email, subject, message)
+                logging.info(f"Sending email to {receiver_email}")
+                print(f"Sending email to {receiver_email}")
             print("Email sent successfully")
             logging.info("Email sent successfully")
         else:
