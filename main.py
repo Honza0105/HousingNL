@@ -95,6 +95,8 @@ logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s
 while True:
     any_new_listings = False
     page_number = 1
+    new_listings_filtered = []
+
     while True:
         # Define the URL for the current page
         url = "https://kamernet.nl/en/for-rent/properties-" + \
@@ -125,21 +127,19 @@ while True:
         new_listings = [Listing(*listing) for listing in new_listings]
 
         # Find new listings that are not in old listings
-        new_listings_filtered = [listing for listing in new_listings if listing not in old_listings]
-
-        # Add new listings to the list of all new listings
-        if new_listings_filtered:
-            any_new_listings = True
-            save_new_listings([listing.__dict__.values() for listing in new_listings_filtered])
-
-        # Increment page number for the next iteration
-        page_number += 1
+        new_listings_filtered.extend([listing for listing in new_listings if listing not in old_listings])
 
         # If no new listings found on the current page, exit the loop
         if not new_listings:
             break
 
-    if any_new_listings:
+        # Increment page number for the next iteration
+        page_number += 1
+
+    if new_listings_filtered:
+        any_new_listings = True
+        save_new_listings([listing.__dict__.values() for listing in new_listings_filtered])
+
         # Send email with all new listings
         message = "New listings found:\n"
         for listing in new_listings_filtered:
@@ -167,4 +167,4 @@ while True:
 
     # Wait for 1/2 hour before making the next request
     print("Waiting for half an hour before checking for new listings again")
-    time.sleep(1000)
+    time.sleep(1800)
