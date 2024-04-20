@@ -106,8 +106,31 @@ while True:
 
         print(f"url used: {url}")
 
-        # Send a GET request to the URL
-        response = requests.get(url)
+        MAX_TRIES = 48  # 24 hours with retries every 60 seconds
+        RETRY_DELAY = 60  # Start with 60 seconds between retries
+
+        for try_num in range(MAX_TRIES):
+
+            try:
+                response = requests.get(url)
+                break
+
+            except requests.exceptions.ConnectionError:
+
+                if try_num < (MAX_TRIES - 1):
+                    time.sleep(RETRY_DELAY)
+                    RETRY_DELAY *= 2  # Exponential backoff up to 60 minutes
+                    print(f"Request {try_num} failed, retrying in {RETRY_DELAY} seconds")
+                    continue
+
+                else:
+                    print("Max retries exceeded, giving up")
+                    raise
+
+            finally:
+                if response:
+                    # Handle successful response
+                    pass
 
         # Check if the request was successful
         if response.status_code != 200:
@@ -169,5 +192,5 @@ while True:
         logging.info("No new listings found")
 
     # Wait for 1/2 hour before making the next request
-    print("Waiting for half an hour before checking for new listings again")
-    time.sleep(1800)
+    print("Waiting for 60 s before checking for new listings again")
+    time.sleep(60)
