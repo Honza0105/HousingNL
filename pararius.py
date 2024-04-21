@@ -1,30 +1,37 @@
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-url = 'https://www.pararius.com/apartments/utrecht'
+def scrape():
+    url = 'https://www.pararius.com/apartments/utrecht'
 
-driver = webdriver.Chrome()
-driver.get(url)
-driver.implicitly_wait(10)
+    # Add Chrome options
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
 
-listings = driver.find_elements(By.CLASS_NAME, 'search-list__item--listing')
+    # Pass options when creating driver
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
+    driver.implicitly_wait(10)
 
-for listing in listings:
+    listings = driver.find_elements(By.CLASS_NAME, 'search-list__item--listing')
 
-  try:
-    price = listing.find_element(By.CLASS_NAME, 'listing-search-item__price').text
-  except NoSuchElementException:
-    price = "N/A"
+    for listing in listings:
 
-  try:
-    features = listing.find_elements(By.CLASS_NAME, 'illustrated-features__item')
-  except NoSuchElementException:
-    features = []
+      try:
+        price = listing.find_element(By.CLASS_NAME, 'listing-search-item__price').text
+      except NoSuchElementException:
+        price = "N/A"
 
-  print(price)
+      try:
+        features = listing.find_elements(By.CLASS_NAME, 'illustrated-features__item')
+      except NoSuchElementException:
+        features = []
 
-  for feature in features:
-    print(feature.text)
+      print(price)
 
-driver.close()
+      for feature in features:
+        print(feature.text)
+
+    driver.close()
