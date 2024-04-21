@@ -1,4 +1,5 @@
 import smtplib
+import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -34,8 +35,10 @@ def send_email(sender_email, sender_password, receiver_email, subject, message):
 
 
 if __name__ == '__main__':
-    # Run Pararius scraping
-    pararius.scrape()
+    while True:
+        # Run Pararius scraping
+        pararius.run(send_email)
 
-    # Run Kamernet notification logic
-    kamernet.run(send_email)
+        # Run Kamernet notification logic
+        kamernet.run(send_email)
+        time.sleep(60)
